@@ -111,8 +111,13 @@ class WebhookListener < BaseListener
     account.webhooks.account_type.each do |webhook|
       next unless webhook.subscriptions.include?(payload[:event])
 
+      webhook_secret =
+        if webhook.respond_to?(:secret)
+          webhook.secret
+        end
+
       WebhookJob.perform_later(webhook.url, payload, :account_webhook,
-                               secret: webhook.secret,
+                               secret: webhook_secret,
                                delivery_id: SecureRandom.uuid)
     end
   end
